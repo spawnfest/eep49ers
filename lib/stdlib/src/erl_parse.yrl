@@ -409,7 +409,7 @@ begin_expr -> 'begin' maybe_exprs 'else' cr_clauses 'end':
 maybe_expr -> expr : '$1'.
 maybe_expr -> expr '<-' expr : {maybe,?anno('$2'),'$1','$3'}.
 
-maybe_exprs -> maybe_expr : '$1'.
+maybe_exprs -> maybe_expr : ['$1'].
 maybe_exprs -> maybe_expr ',' maybe_exprs : ['$1' | '$3'].
 
 case_expr -> 'case' expr 'of' cr_clauses 'end' :
