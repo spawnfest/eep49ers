@@ -402,7 +402,7 @@ if_clauses -> if_clause ';' if_clauses : ['$1' | '$3'].
 if_clause -> guard clause_body :
 	{clause,first_anno(hd(hd('$1'))),[],'$1','$2'}.
 
-begin_expr -> 'begin' maybe_exprs 'end' : {block,?anno('$1'),'$2', []}.
+begin_expr -> 'begin' maybe_exprs 'end' : {block,?anno('$1'),'$2'}.
 begin_expr -> 'begin' maybe_exprs 'else' cr_clauses 'end': 
 	{block,?anno('$1'),'$2', '$4'}.
 
