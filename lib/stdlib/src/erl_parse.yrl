@@ -406,7 +406,7 @@ begin_expr -> 'begin' maybe_exprs 'end' : {block,?anno('$1'),'$2', []}.
 begin_expr -> 'begin' maybe_exprs 'else' cr_clauses 'end': 
 	{block,?anno('$1'),'$2', '$4'}.
 
-maybe_expr -> expr.
+maybe_expr -> expr : '$1'.
 maybe_expr -> expr '<-' expr : {maybe,?anno('$2'),'$1','$3'}.
 
 maybe_exprs -> maybe_expr : '$1'.
