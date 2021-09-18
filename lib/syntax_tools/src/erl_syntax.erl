@@ -7828,7 +7828,8 @@ subtrees(T) ->
                         [block_expr_body(T)];
                     'maybe' ->
                         [[block_expr_body(T)],
-                         block_expr_clauses(T)];
+                         block_expr_clauses(T)]
+                end;
 		case_expr ->
 		    [[case_expr_argument(T)],
 		     case_expr_clauses(T)];
