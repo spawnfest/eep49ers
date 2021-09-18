@@ -162,7 +162,7 @@
 -define(SERVER, cover_server).
 
 %% Line doesn't matter.
--define(BLOCK(Expr), {block,erl_anno:new(0),[Expr],[]}).
+-define(BLOCK(Expr), {block,erl_anno:new(0),[Expr]}).
 -define(BLOCK1(Expr),
         if
             element(1, Expr) =:= block ->
@@ -2233,6 +2233,8 @@ munge_expr({bc,Anno,Expr,Qs}, Vars) ->
     {MungedExpr,Vars2} = munge_expr(?BLOCK1(Expr), Vars),
     {MungedQs, Vars3} = munge_qualifiers(Qs, Vars2),
     {{bc,Anno,MungedExpr,MungedQs}, Vars3};
+munge_expr({block,Anno,Body}, Vars) ->
+    {{block,Anno,MungedBody}, Vars2};
 munge_expr({block,Anno,Body,Clauses}, Vars) ->
     {MungedBody, Vars2} = munge_body(Body, Vars),
     {MungedClauses, Vars3} = munge_clauses(Clauses, Vars2),
