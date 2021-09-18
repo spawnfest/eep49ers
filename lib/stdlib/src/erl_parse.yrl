@@ -721,7 +721,8 @@ Erlang code.
 
 -type af_filter() :: abstract_expr().
 
--type af_block() :: {'block', anno(), af_body(), af_clause_seq()|[]}.
+-type af_block() :: {'block', anno(), af_body()}
+                      | {'block', anno(), af_body(), af_clause_seq()}.
 
 -type af_if() :: {'if', anno(), af_clause_seq()}.
 
