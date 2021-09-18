@@ -2234,11 +2234,12 @@ munge_expr({bc,Anno,Expr,Qs}, Vars) ->
     {MungedQs, Vars3} = munge_qualifiers(Qs, Vars2),
     {{bc,Anno,MungedExpr,MungedQs}, Vars3};
 munge_expr({block,Anno,Body}, Vars) ->
+    {MungedBody, Vars2} = munge_body(Body, Vars),
     {{block,Anno,MungedBody}, Vars2};
 munge_expr({block,Anno,Body,Clauses}, Vars) ->
     {MungedBody, Vars2} = munge_body(Body, Vars),
     {MungedClauses, Vars3} = munge_clauses(Clauses, Vars2),
-    {{block,Anno,MungedBody,MungedClauses}, Vars2};
+    {{block,Anno,MungedBody,MungedClauses}, Vars3};
 munge_expr({'if',Anno,Clauses}, Vars) ->
     {MungedClauses,Vars2} = munge_clauses(Clauses, Vars),
     {{'if',Anno,MungedClauses}, Vars2};
