@@ -6258,29 +6258,32 @@ block_expr(Body, Clauses) ->
     tree(block_expr, #block_expr{body = Body,
                                  clauses = Clauses}).
 
-revert_block_expr(Node) ->
+block_expr_variant(Node) ->
     case unwrap(Node) of
         {block, _, _} ->
-            Pos = get_pos(Node),
-            Body = block_expr_body(Node),
-            {block, Pos, Body};
+            'begin';
         {block, _, _, _} ->
-            Pos = get_pos(Node),
-            Body = block_expr_body(Node),
-            Clauses = block_expr_clauses(Node),
-            {block, Pos, Body, Clauses};
+            'maybe';
         Node1 ->
             case data(Node1) of
                 #block_expr{} ->
-                    Pos = get_pos(Node),
-                    Body = block_expr_body(Node),
-                    Clauses = block_expr_clauses(Node),
-                    {block, Pos, Body, Clauses};
+                    'maybe';
                 _ ->
-                    Pos = get_pos(Node),
-                    Body = block_expr_body(Node),
-                    {block, Pos, Body}
+                    'begin'
             end
+    end.
+
+revert_block_expr(Node) ->
+    case block_expr_variant(Node) of
+        'begin' ->
+            Pos = get_pos(Node),
+            Body = block_expr_body(Node),
+            {block, Pos, Body};
+        'maybe' ->
+            Pos = get_pos(Node),
+            Body = block_expr_body(Node),
+            Clauses = block_expr_clauses(Node),
+            {block, Pos, Body, Clauses}
     end.
 
 
@@ -7820,8 +7823,12 @@ subtrees(T) ->
                     [[bitstring_type_m(T)],
                      [bitstring_type_n(T)]];
 		block_expr ->
-		    [[block_expr_body(T)],
-		     block_expr_clauses(T)];
+                case block_expr_variant(Node) of
+                    'begin' ->
+                        [block_expr_body(T)];
+                    'maybe' ->
+                        [[block_expr_body(T)],
+                         block_expr_clauses(T)];
 		case_expr ->
 		    [[case_expr_argument(T)],
 		     case_expr_clauses(T)];
