@@ -7823,7 +7823,7 @@ subtrees(T) ->
                     [[bitstring_type_m(T)],
                      [bitstring_type_n(T)]];
 		block_expr ->
-                case block_expr_variant(Node) of
+                case block_expr_variant(T) of
                     'begin' ->
                         [block_expr_body(T)];
                     'maybe' ->
