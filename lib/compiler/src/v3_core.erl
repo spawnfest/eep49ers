@@ -681,12 +681,12 @@ expr({block,L,Es0,Cs0}, St0) ->
                     {clause,L,[{tuple,L,[{atom,L,begin_fail_branch},Var]}],[],[Var]};
                 _ ->
                     %% The user submitted error-handling clauses, deal with them
-                    %% in a dedicated `cond_case' expression.
-                    ErrCond = {cond_case,L,Var,Cs0},
-                    {clause,L,[{tuple,L,[{atom,L,begin_fail_branch},Var]}],[],[ErrCond]}
+                    %% in a dedicated `catch_case' expression.
+                    ErrCase = {catch_case,L,Var,Cs0},
+                    {clause,L,[{tuple,L,[{atom,L,begin_fail_branch},Var]}],[],[ErrCase]}
             end,
             %% The top-level wrapper is evaluated standalone.
-            expr({cond_case,L, {base_block,L,Exprs}, [GoodBranch, BadBranch]}, St2)
+            expr({catch_case,L, {base_block,L,Exprs}, [GoodBranch, BadBranch]}, St2)
     end;
 expr({base_block,_,Es0}, St0) ->
     %% Inline the block directly.
@@ -705,13 +705,13 @@ expr({'case',L,E0,Cs0}, St0) ->
     Lanno = lineno_anno(L, St2),
     Fc = fail_clause([Fpat], Lanno, c_tuple([#c_literal{val=case_clause},Fpat])),
     {#icase{anno=#a{anno=Lanno},args=[E1],clauses=Cs1,fc=Fc},Eps,St3};
-expr({cond_case,L,E0,Cs0}, St0) ->
+expr({catch_case,L,E0,Cs0}, St0) ->
     %% Same as 'case' but with a different literal error
     {E1,Eps,St1} = novars(E0, St0),
     {Cs1,St2} = clauses(Cs0, St1),
     {Fpat,St3} = new_var(St2),
     Lanno = lineno_anno(L, St2),
-    Fc = fail_clause([Fpat], Lanno, c_tuple([#c_literal{val=cond_clause},Fpat])),
+    Fc = fail_clause([Fpat], Lanno, c_tuple([#c_literal{val=catch_clause},Fpat])),
     {#icase{anno=#a{anno=Lanno},args=[E1],clauses=Cs1,fc=Fc},Eps,St3};
 expr({'receive',L,Cs0}, St0) ->
     {Cs1,St1} = clauses(Cs0, St0),
@@ -911,7 +911,7 @@ maybe_exprs([{maybe,L,P0,E0}|Es0], St0) ->
     %% Generate a top level expression that turns
     %% the `P0 <- Expr, Exprs' construct into a case
     %% of the form `case Expr of Pat -> Exprs; Failthrough',
-    %% where the `Failthrough' clause runs the `cond' block
+    %% where the `Failthrough' clause runs the `catch' block
     %% of the top-level `begin' (passed in as `Cs0').
     %%
     %% 1. Prepare the first successful pattern as a clause
@@ -935,10 +935,10 @@ maybe_exprs([{maybe,L,P0,E0}|Es0], St0) ->
     Pat = {var,L,PatName},
     BadVal = {tuple,L,[{atom,L,begin_fail_branch},Pat]},
     BadClause = {clause,L,[Pat],[],[BadVal]},
-    %% 3. Put them together in a cond_case, which handles
+    %% 3. Put them together in a catch_case, which handles
     %%    these patterns as a special case expression for
-    %%    begin ... cond ... end constructs
-    {[{cond_case,L,E0,[GoodClause,BadClause]}], St3};
+    %%    begin ... catch ... end constructs
+    {[{catch_case,L,E0,[GoodClause,BadClause]}], St3};
 maybe_exprs([E0|Es0], St0) ->
     {Exprs,St1} = maybe_exprs(Es0,St0),
     {[E0|Exprs], St1};
@@ -948,7 +948,7 @@ maybe_exprs([], St) ->
 %% Wrap the final result of a maybe expression such that
 %% the final item is in a {successful_begin,Val} tuple
 %% for us to match the results.
-maybe_wrap([{cond_case,_,_,_}|_]=Wrapped) ->
+maybe_wrap([{catch_case,_,_,_}|_]=Wrapped) ->
     %% Already annotated from the inside
     Wrapped;
 maybe_wrap([Last]) ->

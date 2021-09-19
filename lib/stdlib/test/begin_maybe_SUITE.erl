@@ -18,7 +18,7 @@ maybe1() ->
         B = ok({ok,A}),
         {ok, C=[_|_]} <- id({ok, append(A,B)}),
         {ok, {A,B,C}}
-    cond
+    catch
         {error, _Unexpected} -> error;
         {ok, _Unexpected} -> error
     end.
@@ -59,7 +59,7 @@ maybe2() ->
         B = ok({ok,A}),
         C=[_|_] <- append(A,B),
         {ok, {A,B,C}}
-    cond
+    catch
         {error, _Unexpected} -> error;
         {ok, _Unexpected} -> error
     end.
@@ -92,11 +92,11 @@ case2() ->
 
 begin3(_Config) ->
     %% These only work if `epp' is modified not to delimit
-    %% `cond ... end' blocks the way they were originally intended.
+    %% `catch ... end' blocks the way they were originally intended.
     ?assertEqual(x, begin _ <- x end),
-    ?assertEqual(x, begin _ <- x cond _ -> y end),
-    ?assertEqual(y, begin nomatch <- x cond _ -> y end),
-    ?assertEqual(y, begin nomatch <- x cond _ -> x, y end),
+    ?assertEqual(x, begin _ <- x catch _ -> y end),
+    ?assertEqual(y, begin nomatch <- x catch _ -> y end),
+    ?assertEqual(y, begin nomatch <- x catch _ -> x, y end),
     ok.
 
 begin4(_Config) ->
@@ -110,7 +110,7 @@ maybe4() ->
         B = ok({ok, A}),
         {ok, C=[_|_]} <- append(A,B),
         {ok, {A,B,C}}
-    cond
+    catch
         {error, _Unexpected} -> error;
         {ok, _Unexpected} -> error
     end.
@@ -137,7 +137,7 @@ case4() ->
             case X of
                 {error, _Unexpected} -> error;
                 {ok, _Unexpected} -> error;
-                ElseErr -> erlang:error({cond_clause, ElseErr})
+                ElseErr -> erlang:error({catch_clause, ElseErr})
             end
     end.
 
@@ -159,11 +159,11 @@ maybe5(A) ->
               end,
         ok <- begin                                                 %% H <- I
                   {error, expected} <- good(D) % D still in scope   %% J
-              cond
+              catch
                   ok -> ok                                          %% K
               end,
         {ok, {A,B,C}}                                               %% L
-    cond
+    catch
         %% TODO: the linter complains here, and it's wrong!
         {error, expected} -> saved;                                 %% M
         {error, Unexpected} -> Unexpected;                          %% N
@@ -186,7 +186,7 @@ case5(A) ->
                                             {'else', OtherG}
                                     end
                              end of                                     %% E (still)
-                                 %% no cond clause, return both flows, no errors possible
+                                 %% no catch clause, return both flows, no errors possible
                                  {value, Ve} -> Ve;
                                  {'else', Ve} -> Ve
                              end
@@ -201,7 +201,7 @@ case5(A) ->
                                      end of
                                          {value, Vk} -> Vk;
                                          {'else', ok} -> ok;            %% K
-                                         ElseErr -> erlang:error({cond_clause, ElseErr})
+                                         ElseErr -> erlang:error({catch_clause, ElseErr})
                                      end
                                  of
                                      ok ->
@@ -227,7 +227,7 @@ end of
             {error, expected} -> saved;        % M
             {error, Unexpected} -> Unexpected; % N
             {ok, _Unexpected} -> error;        % O
-            ElseErrN -> erlang:error({else_clause, ElseErrN})
+            ElseErrN -> erlang:error({catch_clause, ElseErrN})
             end
     end.
 
@@ -242,7 +242,7 @@ maybe6() ->
         {error, expected} <- {ok, 3},
         id(Z),
         X+Z
-    cond
+    catch
         {error, _} -> a;
         {ok, _} -> b
     end.
@@ -279,8 +279,10 @@ begin7(_) ->
 
 maybe7() ->
     begin
-        3
-    cond
+        3,
+        try 1/0 catch _:_ -> ok end,
+        catch 3
+    catch
         {error, _} -> a;
         {ok, _} -> b
     end.
