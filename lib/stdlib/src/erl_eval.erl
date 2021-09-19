@@ -124,7 +124,7 @@ exprs([E|Es], Bs0, Lf, Ef, RBs) ->
     exprs(Es, Bs, Lf, Ef, RBs).
 
 maybe_case(L,Lhs,Rhs,Cs) ->
-    Res = maybe_res(1),
+    Res = maybe_res(),
     case Cs of
         [] ->
             {'case',L,Rhs,
@@ -141,7 +141,7 @@ maybe_case(L,Lhs,Rhs,Cs) ->
     end.
 
 maybe_case(L,Lhs,Rhs,Cs,Es) ->
-    Res = maybe_res(1),
+    Res = maybe_res(),
     case Cs of
         [] ->
             {'case',L,Rhs,
@@ -183,8 +183,9 @@ maybe_exprs([E|Es], Cs, Bs0, Lf, Ef, RBs) ->
     {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
     maybe_exprs(Es, Cs, Bs, Lf, Ef, RBs).
 
-maybe_res(I) ->
-    list_to_atom(lists:concat(['__MaybeResultVar_', I, '__'])).
+maybe_res() ->
+    list_to_atom(lists:flatten(
+                   io_lib:format("'__MaybeResultVar_~p__", [make_ref()]))).
 
 %% expr(Expression, Bindings)
 %% expr(Expression, Bindings, LocalFuncHandler)
