@@ -123,43 +123,25 @@ exprs([E|Es], Bs0, Lf, Ef, RBs) ->
     {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
     exprs(Es, Bs, Lf, Ef, RBs).
 
-maybe_case(L,Lhs,Rhs,Cs) ->
-    Res = maybe_res(),
-    case Cs of
-        [] ->
-            {'case',L,Rhs,
-             [{clause,L,
-               [{match,L,Lhs,{var,L,Res}}],[],[{var,L,Res}]},
-              {clause,L,
-               [{var,L,Res}],[],[{var,L,Res}]}]};
-        _ ->
-            {'case',L,Rhs,
-             [{clause,L,
-               [{match,L,Lhs,{var,L,Res}}],[],[{var,L,Res}]},
-              {clause,L,
-               [{var,L,Res}],[],[{'case',L,{var,L,Res},Cs}]}]}
-    end.
-
 maybe_case(L,Lhs,Rhs,Cs,Es) ->
     Res = maybe_res(),
-    case Cs of
-        [] ->
-            {'case',L,Rhs,
-             [{clause,L,
-               [{match,L,Lhs,{var,L,Res}}],[],Es},
-              {clause,L,
-               [{var,L,Res}],[],[{var,L,Res}]}]};
-        _ ->
-            {'case',L,Rhs,
-             [{clause,L,
-               [{match,L,Lhs,{var,L,Res}}],[],Es},
-              {clause,L,
-               [{var,L,Res}],[],[{'case',L,{var,L,Res},Cs}]}]}
-    end.
+    Match = case Es of
+                [] -> [{var,L,Res}];
+                _ -> Es
+            end,
+    Fail = case Cs of
+               [] -> [{var,L,Res}];
+               _ -> [{'case',L,{var,L,Res},Cs}]
+           end,
+    {'case',L,Rhs,
+     [{clause,L,
+       [{match,L,Lhs,{var,L,Res}}],[],Match},
+      {clause,L,
+       [{var,L,Res}],[],Fail}]}.
 
 maybe_exprs([{maybe,L,Lhs,Rhs}], Bs0, Lf, Ef, RBs) ->
     %% Special case last expression is a maybe, no cond 
-    expr(maybe_case(L,Lhs,Rhs,[]), 
+    expr(maybe_case(L,Lhs,Rhs,[], []), 
          Bs0, Lf, Ef, RBs);
 maybe_exprs([E], Bs0, Lf, Ef, RBs) ->
     expr(E, Bs0, Lf, Ef, RBs);
@@ -172,7 +154,7 @@ maybe_exprs([E|Es], Bs0, Lf, Ef, RBs) ->
 
 maybe_exprs([{maybe,L,Lhs,Rhs}], Cs, Bs0, Lf, Ef, RBs) ->
     %% Special case last expression is a maybe, with cond 
-    expr(maybe_case(L,Lhs,Rhs,Cs), 
+    expr(maybe_case(L,Lhs,Rhs,Cs, []), 
          Bs0, Lf, Ef, RBs);
 maybe_exprs([E], _Cs, Bs0, Lf, Ef, RBs) ->
     expr(E, Bs0, Lf, Ef, RBs);
