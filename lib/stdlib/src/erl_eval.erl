@@ -139,27 +139,10 @@ maybe_case(L,Lhs,Rhs,Cs,Es) ->
       {clause,L,
        [{var,L,Res}],[],Fail}]}.
 
-maybe_exprs([{maybe,L,Lhs,Rhs}], Bs0, Lf, Ef, RBs) ->
-    %% Special case last expression is a maybe, no cond 
-    expr(maybe_case(L,Lhs,Rhs,[], []), 
-         Bs0, Lf, Ef, RBs);
-maybe_exprs([E], Bs0, Lf, Ef, RBs) ->
-    expr(E, Bs0, Lf, Ef, RBs);
-maybe_exprs([{maybe,L,Lhs,Rhs}|Es], Bs0, Lf, Ef, RBs) ->
-    expr(maybe_case(L,Lhs,Rhs,[],Es), Bs0, Lf, Ef, RBs);
-maybe_exprs([E|Es], Bs0, Lf, Ef, RBs) ->
-    RBs1 = none,
-    {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
-    maybe_exprs(Es, Bs, Lf, Ef, RBs).
-
-maybe_exprs([{maybe,L,Lhs,Rhs}], Cs, Bs0, Lf, Ef, RBs) ->
-    %% Special case last expression is a maybe, with cond 
-    expr(maybe_case(L,Lhs,Rhs,Cs, []), 
-         Bs0, Lf, Ef, RBs);
-maybe_exprs([E], _Cs, Bs0, Lf, Ef, RBs) ->
-    expr(E, Bs0, Lf, Ef, RBs);
 maybe_exprs([{maybe,L,Lhs,Rhs}|Es], Cs, Bs0, Lf, Ef, RBs) ->
     expr(maybe_case(L,Lhs,Rhs,Cs,Es), Bs0, Lf, Ef, RBs);
+maybe_exprs([E], _Cs, Bs0, Lf, Ef, RBs) ->
+    expr(E, Bs0, Lf, Ef, RBs);
 maybe_exprs([E|Es], Cs, Bs0, Lf, Ef, RBs) ->
     RBs1 = none,
     {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
@@ -309,7 +292,7 @@ expr({map,_,Es}, Bs0, Lf, Ef, RBs) ->
 	    end, maps:new(), Vs), Bs, RBs);
 
 expr({block,_,Es}, Bs, Lf, Ef, RBs) ->
-    maybe_exprs(Es, Bs, Lf, Ef, RBs);
+    maybe_exprs(Es, [], Bs, Lf, Ef, RBs);
 expr({block,_,Es,Cs}, Bs, Lf, Ef, RBs) ->
     maybe_exprs(Es, Cs, Bs, Lf, Ef, RBs);
 expr({'if',_,Cs}, Bs, Lf, Ef, RBs) ->
