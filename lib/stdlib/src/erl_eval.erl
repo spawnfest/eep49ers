@@ -122,6 +122,25 @@ exprs([E|Es], Bs0, Lf, Ef, RBs) ->
     RBs1 = none,
     {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
     exprs(Es, Bs, Lf, Ef, RBs).
+%
+maybe_exprs([{maybe,L,Lhs,Rhs}], Bs0, Lf, Ef, RBs) ->
+    %% Special case last expression is a maybe, no cond 
+    Res = maybe_res(1),
+    expr({'case',L,Rhs,
+          [{clause,L,
+            [{match,L,Lhs,{var,L,Res}}],[],[{var,L,Res}]},
+           {clause,L,
+            [{var,L,Res}],[],[{var,L,Res}]}]}, 
+         Bs0, Lf, Ef, RBs);
+maybe_exprs([E], Bs0, Lf, Ef, RBs) ->
+    expr(E, Bs0, Lf, Ef, RBs);
+maybe_exprs([E|Es], Bs0, Lf, Ef, RBs) ->
+    RBs1 = none,
+    {value,_V,Bs} = expr(E, Bs0, Lf, Ef, RBs1),
+    maybe_exprs(Es, Bs, Lf, Ef, RBs).
+
+maybe_res(I) ->
+    list_to_atom(lists:concat(['__MaybeResultVar_', I, '__'])).
 
 %% expr(Expression, Bindings)
 %% expr(Expression, Bindings, LocalFuncHandler)
@@ -263,7 +282,7 @@ expr({map,_,Es}, Bs0, Lf, Ef, RBs) ->
 	    end, maps:new(), Vs), Bs, RBs);
 
 expr({block,_,Es}, Bs, Lf, Ef, RBs) ->
-    exprs(Es, Bs, Lf, Ef, RBs);
+    maybe_exprs(Es, Bs, Lf, Ef, RBs);
 expr({'if',_,Cs}, Bs, Lf, Ef, RBs) ->
     if_clauses(Cs, Bs, Lf, Ef, RBs);
 expr({'case',_,E,Cs}, Bs0, Lf, Ef, RBs) ->
